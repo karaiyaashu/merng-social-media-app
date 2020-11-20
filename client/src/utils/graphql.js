@@ -1,22 +1,22 @@
-import { gql } from '@apollo/client';
+import gql from 'graphql-tag';
 
 export const FETCH_POSTS_QUERY = gql`
   {
     getPosts {
       id
       body
-      userName
       createdAt
-      commentsCount
-      comments {
-        body
-        userName
-        createdAt
-      }
-      likesCount
+      username
+      likeCount
       likes {
-        userName
+        username
+      }
+      commentCount
+      comments {
+        id
+        username
         createdAt
+        body
       }
     }
   }

@@ -1,47 +1,34 @@
-import React, { useContext, useState } from "react";
-import { Form, Button } from "semantic-ui-react";
-import { gql, useMutation } from "@apollo/client";
+import React, { useContext, useState } from 'react';
+import { Button, Form } from 'semantic-ui-react';
+import { useMutation } from '@apollo/react-hooks';
+import gql from 'graphql-tag';
 
-import "./Login.css";
-import { AuthContext } from "../context/auth";
-import { useForm } from "../utils/hooks";
+import { AuthContext } from '../context/auth';
+import { useForm } from '../util/hooks';
 
-const LOGIN_USER = gql`
-  mutation LoginUser($userName: String!, $password: String!) {
-    loginUser(userName: $userName, password: $password) {
-      id
-      email
-      userName
-      createdAt
-      token
-    }
-  }
-`;
-
-const Login = (props) => {
+function Login(props) {
     const context = useContext(AuthContext);
-    const [errors, setErrors] = useState("");
-    const { values, handleInputChanged, handleFormSubmitted } = useForm(
-        loginUserCallback,
-        {
-            userName: "",
-            password: "",
-        }
-    );
+    const [errors, setErrors] = useState({});
+
+    const { onChange, onSubmit, values } = useForm(loginUserCallback, {
+        username: '',
+        password: ''
+    });
 
     const [loginUser, { loading }] = useMutation(LOGIN_USER, {
-        update(proxy, { data: { loginUser: userData } }) {
+        update(
+            _,
+            {
+                data: { login: userData }
+            }
+        ) {
             context.login(userData);
-            props.history.push("/");
+            props.history.push('/');
         },
         onError(err) {
-            setErrors(
-                err.graphQLErrors[0].extensions.errors
-                    ? err.graphQLErrors[0].extensions.errors
-                    : err.graphQLErrors[0].extensions.error
-            );
+            setErrors(err.graphQLErrors[0].extensions.exception.errors);
         },
-        variables: values,
+        variables: values
     });
 
     function loginUserCallback() {
@@ -49,42 +36,54 @@ const Login = (props) => {
     }
 
     return (
-        <div className='login'>
-            <Form onSubmit={handleFormSubmitted} loading={loading}>
+        <div className="form-container">
+            <Form onSubmit={onSubmit} noValidate className={loading ? 'loading' : ''}>
                 <h1>Login</h1>
                 <Form.Input
-                    label='User Name'
-                    name='userName'
-                    type='text'
-                    placeholder='User Name'
-                    value={values.userName}
-                    onChange={handleInputChanged}
-                    error={errors.userName ? true : false}
+                    label="Username"
+                    placeholder="Username.."
+                    name="username"
+                    type="text"
+                    value={values.username}
+                    error={errors.username ? true : false}
+                    onChange={onChange}
                 />
                 <Form.Input
-                    label='Password'
-                    name='password'
-                    type='password'
-                    placeholder='Password'
+                    label="Password"
+                    placeholder="Password.."
+                    name="password"
+                    type="password"
                     value={values.password}
-                    onChange={handleInputChanged}
                     error={errors.password ? true : false}
+                    onChange={onChange}
                 />
-                <Button type='submit' color='teal'>
+                <Button type="submit" primary>
                     Login
         </Button>
             </Form>
             {Object.keys(errors).length > 0 && (
-                <div className='ui error message'>
-                    <div className='list'>
-                        {Object.values(errors).map((err) => (
-                            <li key={err}>{err}</li>
+                <div className="ui error message">
+                    <ul className="list">
+                        {Object.values(errors).map((value) => (
+                            <li key={value}>{value}</li>
                         ))}
-                    </div>
+                    </ul>
                 </div>
             )}
         </div>
     );
-};
+}
+
+const LOGIN_USER = gql`
+  mutation login($username: String!, $password: String!) {
+    login(username: $username, password: $password) {
+      id
+      email
+      username
+      createdAt
+      token
+    }
+  }
+`;
 
 export default Login;
